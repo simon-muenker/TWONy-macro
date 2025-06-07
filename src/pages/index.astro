@@ -35,6 +35,7 @@ import "../styles/global.css";
 	<script>
 		import ForceGraph3D from '3d-force-graph';
 		import { interpolateRdYlGn } from 'd3';
+		import * as THREE from 'three';
 		import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 		
 		import {generateNodeData, generateNodes, generateLinks } from '../util.ts';
@@ -51,7 +52,7 @@ import "../styles/global.css";
 		const Graph = new ForceGraph3D(EL)
 			.nodeRelSize(8)
 			.backgroundColor('#000000')
-			.nodeColor(node => interpolateRdYlGn(node.data.sentiment))
+			.nodeColor(node => interpolateRdYlGn((node as any).data.sentiment))
 			.graphData({
 				nodes: generateNodes(N, DATA),
 				links:  generateLinks(N)
@@ -73,13 +74,18 @@ import "../styles/global.css";
 				DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
 			}
 
-			Graph.nodeColor(node => interpolateRdYlGn(node.data.sentiment))
+			Graph.nodeColor(node => interpolateRdYlGn((node as any).data.sentiment))
 		}, 250);
 
-		const bloomPass = new UnrealBloomPass();
-		bloomPass.strength = 4;
-		bloomPass.radius = 1;
-		bloomPass.threshold = 0;
-		Graph.postProcessingComposer().addPass(bloomPass);
+		const bloomPass = new UnrealBloomPass(
+			new THREE.Vector2(window.innerWidth, window.innerHeight),
+			4, // strength
+			1, // radius
+			0 // threshold
+		);
+
+		Graph
+			.postProcessingComposer()
+			.addPass(bloomPass);
 	</script>
 </html>
