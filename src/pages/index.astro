@@ -36,29 +36,19 @@ import "../styles/global.css";
 		import ForceGraph3D from '3d-force-graph';
 		import { interpolateRdYlGn } from 'd3';
 		import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-
-		function generateNodeData(num: Number) {
-			return [...Array(num).keys()].map(i => ({ sentiment: Math.random() }));
-		}
-
-		function generateNodes(num: Number, data: Array<any>) {
-			return [...Array(num).keys()].map(i => ({ id: i, data: data[i] }));
-		}
-
-		function generateLinks(num: Number) {
-			return [...Array(num).keys()]
-				.filter(id => id)
-				.map(id => ({
-					source: id,
-					target: Math.round(Math.random() * (id-1))
-				}));
-		}
+		
+		import {generateNodeData, generateNodes, generateLinks } from '../util.ts';
 
 		// Random tree
 		const N = 1000;
 		const DATA = generateNodeData(N);
+		const EL = document.getElementById('3d-graph');
 
-		const Graph = new ForceGraph3D(document.getElementById('3d-graph'))
+		if (!EL) {
+			throw new Error('Element with id "3d-graph" not found');
+		}
+
+		const Graph = new ForceGraph3D(EL)
 			.nodeRelSize(8)
 			.backgroundColor('#000000')
 			.nodeColor(node => interpolateRdYlGn(node.data.sentiment))
