@@ -69,8 +69,6 @@ import "../styles/global.css";
 		}, 10);
 
 		setInterval(() => {
-			const data = Graph.graphData();
-
 			for (let i = 0; i < DATA.length; i++) {
 				DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
 			}
