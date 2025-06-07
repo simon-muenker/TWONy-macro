@@ -11,6 +11,87 @@ import "../styles/global.css";
 		<title>Astro</title>
 	</head>
 	<body>
-		<h1 class="text-7xl font-bold">Astro</h1>
+		<div class="absolute z-50 top-0 left-0 w-full">
+			<header class="flex flex-row items-center justify-start p-4">
+			<h1 class="text-white text-4xl"> 
+				<span class="font-bold lowercase">T<span class="text-blue-500">W</span>ON</span>y
+				<span class="text-2xl text-slate-300">(macro)</span>
+			</h1>
+		</header>
+		</div>
+		<main>
+			<div id="3d-graph"></div>
+		</main>
+		<div class="absolute z-50 bottom-0 left-0 w-full">
+			<footer class="flex flex-row items-center justify-end p-4">
+				<span class="text-xs text-slate-200">
+					This work is fully supported by twon (project number 101095095), a research project funded by <br />
+					the European Union under the Horizon framework (HORIZON-CL2-022-DEMOCRACY-01-07).
+				</span>
+			</footer>
+		</div>
 	</body>
+
+	<script>
+		import ForceGraph3D from '3d-force-graph';
+		import { interpolateRdYlGn } from 'd3';
+		import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+		function generateNodeData(num: Number) {
+			return [...Array(num).keys()].map(i => ({ sentiment: Math.random() }));
+		}
+
+		function generateNodes(num: Number, data: Array<any>) {
+			return [...Array(num).keys()].map(i => ({ id: i, data: data[i] }));
+		}
+
+		function generateLinks(num: Number) {
+			return [...Array(num).keys()]
+				.filter(id => id)
+				.map(id => ({
+					source: id,
+					target: Math.round(Math.random() * (id-1))
+				}));
+		}
+
+		// Random tree
+		const N = 1000;
+		const DATA = generateNodeData(N);
+
+		const Graph = new ForceGraph3D(document.getElementById('3d-graph'))
+			.nodeRelSize(8)
+			.backgroundColor('#000000')
+			.nodeColor(node => interpolateRdYlGn(node.data.sentiment))
+			.graphData({
+				nodes: generateNodes(N, DATA),
+				links:  generateLinks(N)
+			});
+		
+		// camera orbit
+		const distance = 1800;
+		let angle = 0;
+		setInterval(() => {
+		Graph.cameraPosition({
+			x: distance * Math.sin(angle),
+			z: distance * Math.cos(angle)
+		});
+		angle += Math.PI / 3200;
+		}, 10);
+
+		setInterval(() => {
+			const data = Graph.graphData();
+
+			for (let i = 0; i < DATA.length; i++) {
+				DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
+			}
+
+			Graph.nodeColor(node => interpolateRdYlGn(node.data.sentiment))
+		}, 250);
+
+		const bloomPass = new UnrealBloomPass();
+		bloomPass.strength = 4;
+		bloomPass.radius = 1;
+		bloomPass.threshold = 0;
+		Graph.postProcessingComposer().addPass(bloomPass);
+	</script>
 </html>

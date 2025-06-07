@@ -9,7 +9,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   integrations: [svelte()],
   site: "https://simon-muenker.github.io",
-  base: "_astro_starter",
+  base: "TWONy-macro",
 
   vite: {
     plugins: [tailwindcss()],
