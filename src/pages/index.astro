@@ -19,8 +19,8 @@ import Footer from "@components/Footer.astro";
     </div>
     <main>
       <div id="3d-graph"></div>
-      <div class="absolute top-1/2 right-4 z-50 -translate-y-1/2">
-        <canvas id="eval-chart" width="256" height="180"> </canvas>
+      <div class="absolute bottom-4 left-4 z-50">
+        <canvas id="eval-chart" width="512" height="180"> </canvas>
       </div>
     </main>
     <div class="absolute right-0 bottom-0 z-50 w-full">
@@ -42,6 +42,7 @@ import Footer from "@components/Footer.astro";
       generateLinks,
     } from "@logic/generator.ts";
     import { CONFIG } from "@logic/config.ts";
+    import type { OrbitControls } from "three/examples/jsm/Addons.js";
 
     const DATA = generateNodeData(CONFIG.network.n_agents);
     const graphEL: HTMLElement = document.getElementById(
@@ -66,6 +67,7 @@ import Footer from "@components/Footer.astro";
     const guiNet = gui.addFolder("Network");
     guiNet.add(CONFIG.network, "n_agents", 10, 5000, 10).name("Num. Agents");
     guiNet.add(CONFIG.network, "n_neighbors", 1, 50, 1).name("Num. Neighbors");
+    guiNet.open();
 
     const guiModel = gui.addFolder("Model");
     guiModel
@@ -77,14 +79,14 @@ import Footer from "@components/Footer.astro";
       ])
       .name("Sorting");
     guiModel.add(CONFIG.model, "n_steps", 1, 1000, 1).name("Num. Steps");
-    guiModel.add(CONFIG.model, "eps_bcm", 0.01, 1, 0.01).name("BCM Epsilon");
-    guiModel.add(CONFIG.model, "eps_rei", 0.01, 1, 0.01).name("REI Epsilon");
-    guiModel.add(CONFIG.model, "delta_bcm", 0.01, 1, 0.01).name("BCM Delta");
+    guiModel.add(CONFIG.model, "eps_bcm", 0.01, 1, 0.01).name("Epsilon BCM");
+    guiModel.add(CONFIG.model, "eps_rei", 0.01, 1, 0.01).name("Epsilon REI");
+    guiModel.add(CONFIG.model, "delta_bcm", 0.01, 1, 0.01).name("Delta BCM");
+    guiModel.open();
 
-    const guiUtil = gui.addFolder("Utilities");
-    guiUtil.add(CONFIG.utilities, "distance", 100, 5000, 10).name("Distance");
-
-    const Graph = new ForceGraph3D(graphEL)
+    const Graph = new ForceGraph3D(graphEL, { controlType: "orbit" })
+      .enableNodeDrag(false)
+      .showNavInfo(false)
       .nodeRelSize(8)
       .backgroundColor(CONFIG.utilities.backgroundColor)
       .nodeColor((node) => interpolateRdYlGn((node as any).data.sentiment))
@@ -95,13 +97,17 @@ import Footer from "@components/Footer.astro";
 
     const controls = {
       start: function () {
-        console.log("clicked");
+        startSimulation();
+      },
+      pause: function () {
+        pauseSimulation();
       },
       reset: function () {
-        console.log("reset");
+        resetSimulation();
       },
     };
     gui.add(controls, "start").name("Start");
+    gui.add(controls, "pause").name("Pause");
     gui.add(controls, "reset").name("Reset");
 
     let chart = new Chart(canvasCTX, {
@@ -127,31 +133,60 @@ import Footer from "@components/Footer.astro";
       },
     });
 
-    setInterval(() => {
-      for (let i = 0; i < DATA.length; i++) {
-        DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
-      }
+    let running: boolean = false;
+    let step: number = 0;
 
-      Graph.nodeColor((node) =>
-        interpolateRdYlGn((node as any).data.sentiment),
-      );
+    function startSimulation() {
+      console.debug("> Starting Simulation.");
+      running = true;
+      (Graph.controls() as OrbitControls).autoRotate = true;
 
-      evaluation.push(
+      let runner = setInterval(() => {
+        if (step >= CONFIG.model.n_steps || !running) {
+          pauseSimulation();
+          clearInterval(runner);
+        }
+
+        for (let i = 0; i < DATA.length; i++) {
+          DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
+        }
+
+        Graph.nodeColor((node) =>
+          interpolateRdYlGn((node as any).data.sentiment),
+        );
+
+        evaluation.push(
+          DATA.reduce((total, next) => total + next.sentiment, 0) / DATA.length,
+        );
+        chart.data.labels = Object.keys(evaluation);
+        chart.update();
+
+        step++;
+      }, 250);
+    }
+
+    function pauseSimulation() {
+      console.debug("> Pause Simulation.");
+      running = false;
+      (Graph.controls() as OrbitControls).autoRotate = false;
+    }
+
+    function resetSimulation() {
+      console.debug("> Resetting Simulation.");
+      pauseSimulation();
+
+      step = 0;
+      Graph.graphData({
+        nodes: generateNodes(CONFIG.network.n_agents, DATA),
+        links: generateLinks(CONFIG.network.n_agents),
+      });
+
+      evaluation = [
         DATA.reduce((total, next) => total + next.sentiment, 0) / DATA.length,
-      );
+      ];
       chart.data.labels = Object.keys(evaluation);
       chart.update();
-    }, 250);
-
-    // camera orbit
-    let angle = 0;
-    setInterval(() => {
-      Graph.cameraPosition({
-        x: CONFIG.utilities.distance * Math.sin(angle),
-        z: CONFIG.utilities.distance * Math.cos(angle),
-      });
-      angle += Math.PI / 3200;
-    }, 10);
+    }
 
     if (CONFIG.utilities.bloomFilter) {
       const bloomPass = new UnrealBloomPass(
