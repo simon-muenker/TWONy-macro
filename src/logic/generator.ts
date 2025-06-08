@@ -4,7 +4,12 @@ export interface NodeData {
   sentiment: number;
 }
 
-export function generateNodeData(num: number) {
+export interface NodeLink {
+  source: number;
+  target: number;
+}
+
+export function generateNodeData(num: number): Array<NodeData> {
   return [...Array(num).keys()].map(() => ({
     sentiment: _.random(0, 1, true),
   }));
@@ -14,16 +19,20 @@ export function generateNodes(num: number, data: Array<NodeData>) {
   return [...Array(num).keys()].map((i) => ({ id: i, data: data[i] }));
 }
 
-export function generateLinks(numNodes: number, numLinksPerNode: number = 2) {
-  const links: Array<{ source: number; target: number }> = [];
+export function generateLinks(
+  numNodes: number,
+  numLinksPerNode: number = 2,
+): Array<NodeLink> {
+  const links: Array<NodeLink> = [];
 
   for (let source: number = 0; source < numNodes; source++) {
-    const numLinksForNode = Math.min(numLinksPerNode, source);
     const targets = new Set<number>();
 
-    while (targets.size < numLinksForNode) {
+    while (targets.size < numLinksPerNode) {
       const target = _.random(0, numNodes - 1, false);
-      targets.add(target);
+      if (target !== source) {
+        targets.add(target);
+      }
     }
 
     targets.forEach((target) => {
