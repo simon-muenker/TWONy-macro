@@ -1,6 +1,6 @@
 export let CONFIG = {
   network: {
-    n_agents: 250,
+    n_agents: 150,
     n_neighbors: 2,
   },
   model: {
@@ -12,7 +12,7 @@ export let CONFIG = {
   },
   utilities: {
     bloomFilter: true,
-    backgroundColor: "#000000",
+    backgroundColor: "#000",
     distance: 800,
   },
 };

@@ -1,3 +1,3 @@
 /// <reference path="../.astro/types.d.ts" />
 
-declare module 'dat.gui';
+declare module "dat.gui";

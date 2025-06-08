@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.1.8",
     "3d-force-graph": "^1.77.0",
     "astro": "^5.9.1",
+    "chart.js": "^4.4.9",
     "d3": "^7.9.0",
     "dat.gui": "^0.7.9",
     "lodash": "^4.17.21",
