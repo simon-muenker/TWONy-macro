@@ -1,6 +1,6 @@
 // src/logic/guiSetup.ts
 import { GUI } from "dat.gui";
-import { CONFIG } from "./config";
+import { config } from "./config";
 // import type { SimulationController } from "./simulation";
 
 export function createGUI(): typeof GUI {
@@ -17,35 +17,37 @@ export function createGUI(): typeof GUI {
 }
 
 function setupNetworkFolder(gui: typeof GUI): void {
-  const networkFolder = gui.addFolder("Network");
+  const networkFolder = gui.addFolder(
+    `Network: ${config.network.n_agents} Agents, 2 Random Neighbors`,
+  );
 
-  networkFolder
-    .add(CONFIG.network, "n_agents", 10, 5000, 10)
-    .name("Num. Agents")
-    .onChange(() => {
-      // Trigger network regeneration when changed
-      console.log(
-        "Network configuration changed - restart simulation to apply",
-      );
-    });
+  // networkFolder
+  //   .add(config.network, "n_agents", 10, 5000, 10)
+  //   .name("Num. Agents")
+  //   .onChange(() => {
+  //     // Trigger network regeneration when changed
+  //     console.log(
+  //       "Network configuration changed - restart simulation to apply",
+  //     );
+  //   });
 
-  networkFolder
-    .add(CONFIG.network, "n_neighbors", 1, 50, 1)
-    .name("Num. Neighbors")
-    .onChange(() => {
-      console.log(
-        "Network configuration changed - restart simulation to apply",
-      );
-    });
+  // networkFolder
+  //   .add(config.network, "n_neighbors", 1, 50, 1)
+  //   .name("Num. Neighbors")
+  //   .onChange(() => {
+  //     console.log(
+  //       "Network configuration changed - restart simulation to apply",
+  //     );
+  //   });
 
   networkFolder.open();
 }
 
 function setupModelFolder(gui: typeof GUI): void {
-  const modelFolder = gui.addFolder("Model");
+  const modelFolder = gui.addFolder("Model: Deffuant-Weisbuch BCM");
 
   modelFolder
-    .add(CONFIG.model, "sorting", [
+    .add(config.model, "sorting", [
       "random",
       "similarity",
       "positivity",
@@ -53,13 +55,13 @@ function setupModelFolder(gui: typeof GUI): void {
     ])
     .name("Sorting");
 
-  modelFolder.add(CONFIG.model, "n_steps", 1, 1000, 1).name("Num. Steps");
+  modelFolder.add(config.model, "n_steps", 1, 1000, 1).name("Num. Steps");
 
-  modelFolder.add(CONFIG.model, "eps_bcm", 0.01, 1, 0.01).name("Epsilon BCM");
+  modelFolder.add(config.model, "eps_bcm", 0.01, 1, 0.01).name("Epsilon BCM");
 
-  modelFolder.add(CONFIG.model, "eps_rei", 0.0, 1, 0.01).name("Epsilon REI");
+  //  modelFolder.add(config.model, "eps_rei", 0.0, 1, 0.01).name("Epsilon REI");
 
-  modelFolder.add(CONFIG.model, "delta_bcm", 0.01, 1, 0.01).name("Delta BCM");
+  modelFolder.add(config.model, "delta_bcm", 0.01, 1, 0.01).name("Delta BCM");
 
   modelFolder.open();
 }

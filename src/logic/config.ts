@@ -1,4 +1,4 @@
-export let CONFIG = {
+export let config = {
   network: {
     n_agents: 150,
     n_neighbors: 2,
@@ -6,7 +6,7 @@ export let CONFIG = {
   model: {
     sorting: "random",
     n_steps: 500,
-    eps_bcm: 0.1,
+    eps_bcm: 0.4,
     eps_rei: 0.0,
     delta_bcm: 0.2,
   },

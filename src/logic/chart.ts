@@ -4,11 +4,11 @@ export function createChart(
   canvas: HTMLCanvasElement,
   data: Array<number>,
 ): Chart {
-  const canvasCTX: CanvasRenderingContext2D = canvas.getContext(
+  const ctx: CanvasRenderingContext2D = canvas.getContext(
     "2d",
   ) as CanvasRenderingContext2D;
 
-  return new Chart(canvasCTX, {
+  return new Chart(ctx, {
     type: "line",
     data: {
       labels: [0],
@@ -30,4 +30,12 @@ export function createChart(
       },
     },
   });
+}
+
+export function destroyChart(canvas: HTMLCanvasElement): void {
+  const ctx: CanvasRenderingContext2D = canvas.getContext(
+    "2d",
+  ) as CanvasRenderingContext2D;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }

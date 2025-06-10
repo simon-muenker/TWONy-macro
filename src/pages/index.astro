@@ -14,32 +14,42 @@ import Footer from "@components/Footer.astro";
     <title>TWONy-macro</title>
   </head>
   <body>
-    <div class="absolute top-0 left-0 z-50 w-auto bg-black/30 rounded-br-2xl backdrop-blur-lg">
+    <div
+      class="absolute top-0 left-0 z-50 w-auto rounded-br-2xl bg-black/30 backdrop-blur-lg"
+    >
       <Header />
     </div>
     <main>
       <div id="3d-graph"></div>
-      <div class="absolute bottom-0 left-0 z-50 p-4 bg-black/30 rounded-tr-2xl backdrop-blur-lg">
+      <div
+        class="absolute bottom-0 left-0 z-50 rounded-tr-2xl bg-black/30 p-4 backdrop-blur-lg"
+      >
         <canvas id="eval-chart" width="512" height="180"> </canvas>
       </div>
     </main>
-    <div class="absolute right-0 bottom-0 z-50 w-auto bg-black/30 rounded-tl-2xl backdrop-blur-lg">
+    <div
+      class="absolute right-0 bottom-0 z-50 w-auto rounded-tl-2xl bg-black/30 backdrop-blur-lg"
+    >
       <Footer />
     </div>
   </body>
 
   <script>
-    import { interpolateRdYlGn } from "d3";
-
-    import { createChart } from "@logic/chart.js";
-    import { createGraph, updateGraphData } from "@logic/graph.js";
+    import _ from "lodash";
+    import { createChart, destroyChart } from "@logic/chart.js";
+    import {
+      createGraph,
+      generateGraphData,
+      applyColorScale,
+      toggleOrbitControls,
+    } from "@logic/graph.js";
     import { createGUI } from "@logic/gui.js";
 
-    import { generateNodeData } from "@logic/generator.ts";
-    import { CONFIG } from "@logic/config.ts";
-    import type { OrbitControls } from "three/examples/jsm/Addons.js";
+    import { config } from "@logic/config.ts";
+    import { deffuant_weibach_bcm, select_neighbor } from "@logic/model.ts";
 
-    const DATA = generateNodeData(CONFIG.network.n_agents);
+    import type { NodeData } from "@logic/generator.ts";
+
     const graphEL: HTMLElement = document.getElementById(
       "3d-graph",
     ) as HTMLElement;
@@ -47,14 +57,7 @@ import Footer from "@components/Footer.astro";
       "eval-chart",
     ) as HTMLCanvasElement;
 
-    let evaluation: Array<number> = [
-      DATA.reduce((total, next) => total + next.sentiment, 0) / DATA.length,
-    ];
-
     const gui = createGUI();
-    const Graph = createGraph(graphEL, DATA);
-    const chart = createChart(canvasEL, evaluation);
-
     const controls = {
       start: function () {
         startSimulation();
@@ -63,49 +66,72 @@ import Footer from "@components/Footer.astro";
         pauseSimulation();
       },
       reset: function () {
-        resetSimulation();
+        window.location.reload();
       },
     };
     gui.add(controls, "start").name("Start");
     gui.add(controls, "pause").name("Pause");
     gui.add(controls, "reset").name("Reset");
 
+    const graph = createGraph(graphEL);
     let running: boolean = false;
     let step: number = 0;
+    let data: Array<NodeData> = [];
+    let evaluation: Array<number> = [];
+    resetSimulation();
 
     function startSimulation() {
       console.debug("> Starting Simulation.");
       running = true;
-      (Graph.controls() as OrbitControls).autoRotate = true;
+      toggleOrbitControls(graph);
+
+      const chart = createChart(canvasEL, evaluation);
 
       let runner = setInterval(() => {
-        if (step >= CONFIG.model.n_steps || !running) {
+        if (step >= config.model.n_steps || !running) {
           pauseSimulation();
           clearInterval(runner);
         }
 
-        for (let i = 0; i < DATA.length; i++) {
-          DATA[i].sentiment = DATA[i].sentiment + (Math.random() - 0.5) * 0.5;
+        let graphData = graph.graphData();
+
+        for (let i = 0; i < data.length; i++) {
+          let neighbor = graphData.links
+            .filter(
+              (link) => link.source && (link.source as { id: number }).id === i,
+            )
+            .map(
+              (link) =>
+                link.target &&
+                (link.target as { data: NodeData }).data.sentiment,
+            );
+
+          let selected_neighbor_value = select_neighbor(
+            data[i].sentiment,
+            neighbor,
+            config.model.sorting,
+          );
+
+          data[i].sentiment = deffuant_weibach_bcm(
+            data[i].sentiment,
+            selected_neighbor_value,
+          );
         }
 
-        Graph.nodeColor((node) =>
-          interpolateRdYlGn((node as any).data.sentiment),
-        );
+        applyColorScale(graph);
 
-        evaluation.push(
-          DATA.reduce((total, next) => total + next.sentiment, 0) / DATA.length,
-        );
+        evaluation.push(_.mean(data.map((d) => d.sentiment)));
         chart.data.labels = Object.keys(evaluation);
         chart.update();
 
         step++;
-      }, 250);
+      }, 50);
     }
 
     function pauseSimulation() {
       console.debug("> Pause Simulation.");
       running = false;
-      (Graph.controls() as OrbitControls).autoRotate = false;
+      toggleOrbitControls(graph, false);
     }
 
     function resetSimulation() {
@@ -113,14 +139,9 @@ import Footer from "@components/Footer.astro";
       pauseSimulation();
 
       step = 0;
-
-      updateGraphData(Graph, DATA);
-
-      evaluation = [
-        DATA.reduce((total, next) => total + next.sentiment, 0) / DATA.length,
-      ];
-      chart.data.labels = Object.keys(evaluation);
-      chart.update();
+      data = generateGraphData(graph);
+      evaluation = [_.mean(data.map((d) => d.sentiment))];
+      destroyChart(canvasEL);
     }
   </script>
 </html>
