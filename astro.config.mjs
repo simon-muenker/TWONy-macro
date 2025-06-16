@@ -10,7 +10,6 @@ export default defineConfig({
   integrations: [svelte()],
   site: "https://simon-muenker.github.io",
   base: "TWONy-macro",
-
   vite: {
     plugins: [tailwindcss()],
   },

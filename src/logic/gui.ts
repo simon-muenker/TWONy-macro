@@ -1,79 +1,114 @@
 // src/logic/guiSetup.ts
-import { GUI } from "dat.gui";
+import { Pane } from "tweakpane";
+import * as TweakpaneEssentialsPlugin from "@tweakpane/plugin-essentials";
 import { config } from "./config";
-// import type { SimulationController } from "./simulation";
 
-export function createGUI(): typeof GUI {
-  const gui = new GUI({
-    name: "Configuration",
-    width: 280,
+export function createGUI(controls: Array<Function>): Pane {
+  const gui = new Pane({
+    title: "Configuration",
+    expanded: true,
   });
+  gui.registerPlugin(TweakpaneEssentialsPlugin);
 
-  setupNetworkFolder(gui);
+  setupNetworkFolder(gui, controls);
   setupModelFolder(gui);
-  //setupControlsFolder(gui, simulation);
+  setupControlsFolder(gui, controls);
 
   return gui;
 }
 
-function setupNetworkFolder(gui: typeof GUI): void {
-  const networkFolder = gui.addFolder(
-    `Network: ${config.network.n_agents} Agents, 2 Random Neighbors`,
-  );
+function setupNetworkFolder(gui: Pane, controls: Array<Function>): void {
+  const networkFolder = gui.addFolder({
+    title: `Network (Random Neighbors)`,
+    expanded: true,
+  });
 
-  // networkFolder
-  //   .add(config.network, "n_agents", 10, 5000, 10)
-  //   .name("Num. Agents")
-  //   .onChange(() => {
-  //     // Trigger network regeneration when changed
-  //     console.log(
-  //       "Network configuration changed - restart simulation to apply",
-  //     );
-  //   });
+  networkFolder.addBinding(config.network, "n_agents", {
+    label: "Num._Agents",
+    min: 5,
+    max: 500,
+    step: 5,
+  });
 
-  // networkFolder
-  //   .add(config.network, "n_neighbors", 1, 50, 1)
-  //   .name("Num. Neighbors")
-  //   .onChange(() => {
-  //     console.log(
-  //       "Network configuration changed - restart simulation to apply",
-  //     );
-  //   });
+  networkFolder.addBinding(config.network, "n_neighbors", {
+    label: "Num._Neighbors",
+    min: 1,
+    max: 5,
+    step: 1,
+  });
 
-  networkFolder.open();
+  networkFolder.on("change", (_) => {
+    controls[2]();
+  });
 }
 
-function setupModelFolder(gui: typeof GUI): void {
-  const modelFolder = gui.addFolder("Model: Deffuant-Weisbuch BCM");
+function setupModelFolder(gui: Pane): void {
+  const modelFolder = gui.addFolder({
+    title: "Model (Deffuant-Weisbuch BCM)",
+    expanded: true,
+  });
 
-  modelFolder
-    .add(config.model, "sorting", [
-      "random",
-      "similarity",
-      "positivity",
-      "negativity",
-    ])
-    .name("Sorting");
+  modelFolder.addBinding(config.model, "sorting", {
+    label: "Sorting",
+    options: {
+      random: "random",
+      similarity: "similarity",
+      positivity: "positivity",
+      negativity: "negativity",
+    },
+  });
 
-  modelFolder.add(config.model, "n_steps", 1, 1000, 1).name("Num. Steps");
+  modelFolder.addBinding(config.model, "n_steps", {
+    label: "Num._Steps",
+    min: 50,
+    max: 1000,
+    step: 50,
+  });
 
-  modelFolder.add(config.model, "eps_bcm", 0.01, 1, 0.01).name("Epsilon BCM");
+  modelFolder.addBinding(config.model, "eps_bcm", {
+    label: "Epsilon_BCM",
+    min: 0.01,
+    max: 1.0,
+    step: 0.01,
+  });
 
-  //  modelFolder.add(config.model, "eps_rei", 0.0, 1, 0.01).name("Epsilon REI");
-
-  modelFolder.add(config.model, "delta_bcm", 0.01, 1, 0.01).name("Delta BCM");
-
-  modelFolder.open();
+  modelFolder.addBinding(config.model, "delta_bcm", {
+    label: "Delta_BCM",
+    min: 0.01,
+    max: 1.0,
+    step: 0.01,
+  });
 }
 
-// function setupControlsFolder(gui: GUI, simulation: SimulationController): void {
-//   const controls = {
-//     start: () => simulation.start(),
-//     pause: () => simulation.pause(),
-//     reset: () => simulation.reset(),
-//   };
+function setupControlsFolder(gui: Pane, controls: Array<Function>): void {
+  const controlFolder = gui.addFolder({
+    title: "Controls",
+    expanded: true,
+  });
 
-//   gui.add(controls, "start").name("Start");
-//   gui.add(controls, "pause").name("Pause");
-//   gui.add(controls, "reset").name("Reset");
-// }
+  (
+    controlFolder.addBlade({
+      view: "buttongrid",
+      size: [3, 1],
+      cells: (x: number) => ({
+        title: ["Start", "Pause", "Reset"][x],
+      }),
+    }) as any
+  ).on("click", (ev: any) => {
+    controls[ev.index[0]]();
+  });
+
+  controlFolder.addBinding(config.state, "current_step", {
+    label: "Progress",
+    readonly: true,
+    format: (v) => ((v / config.model.n_steps) * 100).toFixed(2),
+  });
+
+  controlFolder.addBinding(config.state, "current_evaluation", {
+    label: "Evaluation",
+    readonly: true,
+    view: "graph",
+    min: 0,
+    max: +1,
+  });
+}

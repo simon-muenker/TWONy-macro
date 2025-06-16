@@ -36,7 +36,11 @@ import Footer from "@components/Footer.astro";
 
   <script>
     import _ from "lodash";
-    import { createChart, destroyChart } from "@logic/chart.js";
+    import {
+      createChart,
+      prepareChart,
+      updateChartData,
+    } from "@logic/chart.js";
     import {
       createGraph,
       generateGraphData,
@@ -50,6 +54,8 @@ import Footer from "@components/Footer.astro";
 
     import type { NodeData } from "@logic/generator.ts";
 
+    let data: Array<NodeData> = [];
+
     const graphEL: HTMLElement = document.getElementById(
       "3d-graph",
     ) as HTMLElement;
@@ -57,38 +63,26 @@ import Footer from "@components/Footer.astro";
       "eval-chart",
     ) as HTMLCanvasElement;
 
-    const gui = createGUI();
-    const controls = {
-      start: function () {
-        startSimulation();
-      },
-      pause: function () {
-        pauseSimulation();
-      },
-      reset: function () {
-        window.location.reload();
-      },
-    };
-    gui.add(controls, "start").name("Start");
-    gui.add(controls, "pause").name("Pause");
-    gui.add(controls, "reset").name("Reset");
+    const controls = [startSimulation, pauseSimulation, resetSimulation];
 
+    const gui = createGUI(controls);
+    const chart = createChart(canvasEL);
     const graph = createGraph(graphEL);
-    let running: boolean = false;
-    let step: number = 0;
-    let data: Array<NodeData> = [];
-    let evaluation: Array<number> = [];
+
     resetSimulation();
 
     function startSimulation() {
+      if (config.state.running) return;
+
       console.debug("> Starting Simulation.");
-      running = true;
+      config.state.running = true;
       toggleOrbitControls(graph);
 
-      const chart = createChart(canvasEL, evaluation);
-
       let runner = setInterval(() => {
-        if (step >= config.model.n_steps || !running) {
+        if (
+          config.state.current_step >= config.model.n_steps ||
+          !config.state.running
+        ) {
           pauseSimulation();
           clearInterval(runner);
         }
@@ -120,28 +114,31 @@ import Footer from "@components/Footer.astro";
 
         applyColorScale(graph);
 
-        evaluation.push(_.mean(data.map((d) => d.sentiment)));
-        chart.data.labels = Object.keys(evaluation);
-        chart.update();
+        config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
+        updateChartData(chart, data);
 
-        step++;
+        config.state.current_step++;
       }, 50);
     }
 
     function pauseSimulation() {
+      if (!config.state.running) return;
+
       console.debug("> Pause Simulation.");
-      running = false;
+      config.state.running = false;
       toggleOrbitControls(graph, false);
     }
 
     function resetSimulation() {
       console.debug("> Resetting Simulation.");
-      pauseSimulation();
+      if (config.state.running) pauseSimulation();
 
-      step = 0;
       data = generateGraphData(graph);
-      evaluation = [_.mean(data.map((d) => d.sentiment))];
-      destroyChart(canvasEL);
+
+      config.state.current_step = 0;
+      config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
+
+      prepareChart(chart, data);
     }
   </script>
 </html>

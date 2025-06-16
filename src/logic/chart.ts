@@ -1,9 +1,9 @@
 import Chart from "chart.js/auto";
 
-export function createChart(
-  canvas: HTMLCanvasElement,
-  data: Array<number>,
-): Chart {
+import { config } from "@logic/config.ts";
+import type { NodeData } from "@logic/generator.ts";
+
+export function createChart(canvas: HTMLCanvasElement): Chart {
   const ctx: CanvasRenderingContext2D = canvas.getContext(
     "2d",
   ) as CanvasRenderingContext2D;
@@ -11,20 +11,24 @@ export function createChart(
   return new Chart(ctx, {
     type: "line",
     data: {
-      labels: [0],
-      datasets: [
-        {
-          label: "Average Sentiment",
-          data: data,
-          borderColor: "rgb(255, 255, 255)",
-          fill: false,
-          tension: 0.1,
-        },
-      ],
+      labels: [],
+      datasets: [],
     },
     options: {
+      animation: false,
+      elements: {
+        point: {
+          radius: 0,
+        },
+      },
       scales: {
-        x: {
+        y: {
+          min: 0.0,
+          max: 1.0,
+        },
+      },
+      plugins: {
+        legend: {
           display: false,
         },
       },
@@ -32,10 +36,29 @@ export function createChart(
   });
 }
 
-export function destroyChart(canvas: HTMLCanvasElement): void {
-  const ctx: CanvasRenderingContext2D = canvas.getContext(
-    "2d",
-  ) as CanvasRenderingContext2D;
+export function prepareChart(chart: Chart, data: Array<NodeData>): void {
+  chart.data.datasets = [];
+  chart.data.labels = [...Array(config.model.n_steps).keys()];
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < config.network.n_agents; ++i) {
+    chart.data.datasets.push(formatDataset([data[i].sentiment]));
+  }
+}
+
+export function updateChartData(chart: Chart, data: Array<NodeData>) {
+  for (let i = 0; i < chart.data.datasets.length; ++i) {
+    chart.data.datasets[i].data.push(data[i].sentiment);
+  }
+  chart.update();
+}
+
+export function formatDataset(data: Array<number>) {
+  return {
+    label: "_",
+    data: data,
+    borderColor: "rgb(255, 255, 255)",
+    borderWidth: 0.5,
+    fill: false,
+    tension: 0.1,
+  };
 }
