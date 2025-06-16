@@ -43,6 +43,7 @@ export function prepareChart(chart: Chart, data: Array<NodeData>): void {
   for (let i = 0; i < config.network.n_agents; ++i) {
     chart.data.datasets.push(formatDataset([data[i].sentiment]));
   }
+  chart.update();
 }
 
 export function updateChartData(chart: Chart, data: Array<NodeData>) {
