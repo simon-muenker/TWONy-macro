@@ -16,6 +16,8 @@ export function createChart(canvas: HTMLCanvasElement): Chart {
     },
     options: {
       animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
       elements: {
         point: {
           radius: 0,

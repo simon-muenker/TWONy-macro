@@ -31,7 +31,7 @@ export function createGraph(element: HTMLElement): Graph {
   addEventListener("resize", () => {
     graph.width(window.innerWidth);
     graph.height(window.innerHeight);
-  })
+  });
 
   return graph;
 }
