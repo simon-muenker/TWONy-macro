@@ -19,7 +19,7 @@ export function createGUI(controls: Array<Function>): Pane {
 
 function setupNetworkFolder(gui: Pane, controls: Array<Function>): void {
   const networkFolder = gui.addFolder({
-    title: `Network (Random Neighbors)`,
+    title: `Network (Random Regular Graph)`,
     expanded: true,
   });
 
