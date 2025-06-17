@@ -52,9 +52,7 @@ import Footer from "@components/Footer.astro";
     import { config } from "@logic/config.ts";
     import { deffuant_weibach_bcm, select_neighbor } from "@logic/model.ts";
 
-    import type { NodeData } from "@logic/generator.ts";
-
-    let data: Array<NodeData> = [];
+    import { type NodeData, get_neighbors } from "@logic/generator.ts";
 
     const graphEL: HTMLElement = document.getElementById(
       "3d-graph",
@@ -63,9 +61,9 @@ import Footer from "@components/Footer.astro";
       "eval-chart",
     ) as HTMLCanvasElement;
 
-    const controls = [startSimulation, pauseSimulation, resetSimulation];
+    let data: Array<NodeData> = [];
 
-    const gui = createGUI(controls);
+    createGUI([startSimulation, pauseSimulation, resetSimulation]);
     const chart = createChart(canvasEL);
     const graph = createGraph(graphEL);
 
@@ -78,29 +76,19 @@ import Footer from "@components/Footer.astro";
       config.state.running = true;
       toggleOrbitControls(graph);
 
-      let runner = setInterval(() => {
+      const runner = setInterval(() => {
         if (
           config.state.current_step >= config.model.n_steps ||
           !config.state.running
         ) {
-          pauseSimulation();
           clearInterval(runner);
+          pauseSimulation();
         }
 
-        let graphData = graph.graphData();
-
         for (let i = 0; i < data.length; i++) {
-          let neighbor = graphData.links
-            .filter(
-              (link) => link.source && (link.source as { id: number }).id === i,
-            )
-            .map(
-              (link) =>
-                link.target &&
-                (link.target as { data: NodeData }).data.sentiment,
-            );
+          const neighbor = get_neighbors(i, graph.graphData().links);
 
-          let selected_neighbor_value = select_neighbor(
+          const selected_neighbor_value = select_neighbor(
             data[i].sentiment,
             neighbor,
             config.model.sorting,
@@ -113,8 +101,7 @@ import Footer from "@components/Footer.astro";
         }
 
         applyColorScale(graph);
-
-        config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
+        setCurrentEvaluation();
         updateChartData(chart, data);
 
         config.state.current_step++;
@@ -134,11 +121,15 @@ import Footer from "@components/Footer.astro";
       if (config.state.running) pauseSimulation();
 
       data = generateGraphData(graph);
+      
+      setCurrentEvaluation();
+      prepareChart(chart, data);
 
       config.state.current_step = 0;
-      config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
+    }
 
-      prepareChart(chart, data);
+    function setCurrentEvaluation() {
+      config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
     }
   </script>
 </html>

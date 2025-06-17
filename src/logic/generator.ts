@@ -1,5 +1,7 @@
 import _ from "lodash";
 
+import type { LinkObject, NodeObject } from "three-forcegraph";
+
 export interface NodeData {
   sentiment: number;
 }
@@ -41,4 +43,18 @@ export function generateLinks(
   }
 
   return links;
+}
+
+export function get_neighbors(
+  origin_id: number,
+  links: LinkObject<NodeObject>[],
+) {
+  return links
+    .filter(
+      (link) => link.source && (link.source as { id: number }).id === origin_id,
+    )
+    .map(
+      (link) =>
+        link.target && (link.target as { data: NodeData }).data.sentiment,
+    );
 }
