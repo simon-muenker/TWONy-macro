@@ -28,6 +28,11 @@ export function createGraph(element: HTMLElement): Graph {
     setupBloomEffect(graph);
   }
 
+  addEventListener("resize", () => {
+    graph.width(window.innerWidth);
+    graph.height(window.innerHeight);
+  })
+
   return graph;
 }
 
