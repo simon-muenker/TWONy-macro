@@ -19,7 +19,7 @@ const { title } = Astro.props;
   </head>
   <body class="min-h-full min-w-full">
    <div
-      class="absolute top-0 left-0 z-50 hidden w-auto rounded-br-2xl bg-black/10 backdrop-blur-md md:block"
+      class="fixed top-0 left-0 z-50 hidden w-auto rounded-br-2xl bg-black/10 backdrop-blur-md md:block"
     >
       <Header />
     </div>
@@ -27,7 +27,7 @@ const { title } = Astro.props;
       <slot />
     </main>
     <div
-      class="absolute right-0 bottom-0 z-50 hidden w-auto rounded-tl-2xl bg-black/10 backdrop-blur-md md:block"
+      class="fixed right-0 bottom-0 z-50 hidden w-auto rounded-tl-2xl bg-black/10 backdrop-blur-md md:block"
     >
       <Footer />
     </div>

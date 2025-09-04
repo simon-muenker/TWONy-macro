@@ -2,41 +2,56 @@
 import BaseLayout from "src/layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="TWONy-macro - Simulation">
-    <div class="w-full h-full bg-black text-white text-sm">
-      <div class="mx-auto max-w-xl py-16">
-        <h1 class="text-white text-4xl font-bold mb-2">Introduction</h1>
+<BaseLayout title="TWONy-macro">
+    <div class="w-full min-h-full bg-black text-white">
+      <div class="mx-auto max-w-2xl py-36 px-1">
+        <h1 class="text-white text-3xl md:text-6xl font-bold mb-2">Introduction</h1>
 
-        todo: explain system and ask user to proceed after reading using the button below.
+        <p class="leading-6 mb-4">
+          Welcome to TWONy-macro, an interactive demonstration that shows how network structure and algorithmic choices shape opinion formation in online communities. Watch as virtual agents with evolving sentiment states interact in a 3D network visualization, creating patterns of opinion convergence, clustering, and polarization. This simulation helps visualize how the topology of social networks and recommendation algorithms influence the collective emotional dynamics of digital communities.
+        </p>
 
-        A macro-simulation of the impact of social network mechanics on opinion dynamics and sentiment evolution. This interactive demonstration shows how network topology and algorithmic choices affect opinion formation in online communities by simulating virtual agents with evolving sentiment states in a 3D network visualization.
+        <p class="text-sm leading-5 mb-2">
+          Explore different neighbor selection strategies - from random interactions to similarity-based or sentiment-biased connections - and observe how these algorithmic choices dramatically affect whether communities converge toward consensus or fragment into opposing camps. Everything runs locally in your browser using advanced 3D graphics and real-time opinion dynamics modeling.
 
-        ## Model Parameters
+        </p>
 
-        ### Network Configuration
-        - **Number of Agents**: Size of the social network (5-500 nodes)
-        - **Number of Neighbors**: Connectivity degree for each agent (1-5 connections)
+        <h2 class="mt-6 mb-2 text-xl md:text-3xl">How It Works</h2>
+        <p class="leading-6 mb-4">
+          This simulation implements the Deffuant-Weisbuch Bounded Confidence Model, where virtual agents only influence each other's opinions if they're within a certain "confidence threshold" and can be configured through the following features:
+        </p>
 
-        ### Opinion Dynamics (Deffuant-Weisbuch BCM)
-        - **Epsilon BCM**: Confidence threshold for opinion influence (0.01-1.0)
-        - **Delta BCM**: Influence strength parameter (0.01-1.0)
-        - **Sorting Strategy**: Algorithm for neighbor selection during interactions
+        <ul class="list-decimal mb-4 pl-8">
+          <li class="mb-2">
+            <span class="font-bold">Network Configuration</span>
+            <ul class="list-disc pl-6">
+              <li>Number of Agents: Size of the social network (5-500 nodes)</li>
+              <li>Number of Neighbors: Connectivity degree for each agent (1-5 connections)</li>
+            </ul>
+          </li>
+          <li class="mb-2">
+            <span class="font-bold">Opinion Dynamics (Deffuant-Weisbuch BCM)</span>
+            <ul class="list-disc pl-6">
+                <li>Epsilon BCM: Confidence threshold for opinion influence (0.01-1.0)</li>
+                <li>Delta BCM: Influence strength parameter (0.01-1.0)</li>
+                <li>Sorting Strategy: Algorithm for neighbor selection during interactions</li>
+            </ul>
+          </li>
+          <li class="mb-2">
+            <span class="font-bold">Simulation Control</span>
+            <ul class="list-disc pl-6">
+                <li>Number of Steps: Total simulation duration (50-1000 iterations)</li>
+                <li>Real-time Controls: Start, pause, and reset functionality</li>
+                <li>Progress Tracking: Current step and network evaluation metrics</li>
+            </ul>
+          </li>
+        </ul>
 
-        ### Simulation Control
-        - **Number of Steps**: Total simulation duration (50-1000 iterations)
-        - **Real-time Controls**: Start, pause, and reset functionality
-        - **Progress Tracking**: Current step and network evaluation metrics
+        <p class="text-sm leading-5 mb-2">
+          This educational tool demonstrates core concepts from computational social science, helping users understand how algorithmic design choices in social media platforms can inadvertently shape the emotional landscape of online discourse.
+        </p>
 
-        ## Scientific Background
-
-        The simulation implements the **Deffuant-Weisbuch Bounded Confidence Model**, a well-established model in computational social science for studying opinion dynamics. Key concepts include:
-
-        - **Bounded Confidence**: Agents only influence each other if their opinions are within a certain threshold
-        - **Continuous Opinions**: Sentiment values range from 0 (negative) to 1 (positive)
-        - **Network Effects**: Topology and neighbor selection algorithms significantly impact convergence patterns
-        - **Emergent Behavior**: Simple local interactions can lead to complex global patterns like polarization or consensus
-
-        <div class="my-4 mx-auto text-center">
+        <div class="my-8 mx-auto text-center">
             <a class="inline-block px-4 py-2 bg-emerald-500 rounded-full font-bold text-black text-base hover:animate-pulse" href="/TWONy-macro/simulation">
               to simulation
             </a>
