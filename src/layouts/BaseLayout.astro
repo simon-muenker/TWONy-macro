@@ -10,14 +10,14 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<html lang="en" class="min-h-full min-w-full">
+<html lang="en" class="min-h-screen min-w-screen">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
   </head>
-  <body class="min-h-full min-w-full bg-slate-100">
+  <body class="min-h-screen min-w-screen bg-black">
     <div class="fixed top-0 left-0 z-50 p-3 md:hidden">
       <span class="text-xl text-slate-300">
         <span class="font-bold lowercase">T<span class="text-blue-500">W</span>ON</span>y
