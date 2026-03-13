@@ -16,6 +16,7 @@ export let config = {
   },
   state: {
     running: false,
+    auto_loop: false,
     current_step: 0,
     current_evaluation: 0.0,
   },

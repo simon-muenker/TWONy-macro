@@ -100,6 +100,10 @@ function setupControlsFolder(gui: Pane, controls: Array<Function>, expanded: boo
     expanded,
   });
 
+  controlFolder.addBinding(config.state, "auto_loop", {
+    label: "Auto Loop",
+  });
+
   (
     controlFolder.addBlade({
       view: "buttongrid",

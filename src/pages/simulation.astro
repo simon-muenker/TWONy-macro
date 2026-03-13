@@ -61,8 +61,12 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
           !config.state.running
         ) {
           clearInterval(runner);
-          resetSimulation();
-          startSimulation();
+          if (config.state.auto_loop && config.state.running) {
+            resetSimulation();
+            startSimulation();
+          } else {
+            resetSimulation();
+          }
         }
 
         for (let i = 0; i < data.length; i++) {
