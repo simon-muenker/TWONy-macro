@@ -3,24 +3,29 @@ import { Pane } from "tweakpane";
 import * as TweakpaneEssentialsPlugin from "@tweakpane/plugin-essentials";
 import { config } from "./config";
 
+function shouldExpandByDefault(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+}
+
 export function createGUI(controls: Array<Function>): Pane {
+  const expanded = shouldExpandByDefault();
   const gui = new Pane({
     title: "Configuration",
-    expanded: true,
+    expanded,
   });
   gui.registerPlugin(TweakpaneEssentialsPlugin);
 
-  setupNetworkFolder(gui, controls);
-  setupModelFolder(gui);
-  setupControlsFolder(gui, controls);
+  setupNetworkFolder(gui, controls, expanded);
+  setupModelFolder(gui, expanded);
+  setupControlsFolder(gui, controls, expanded);
 
   return gui;
 }
 
-function setupNetworkFolder(gui: Pane, controls: Array<Function>): void {
+function setupNetworkFolder(gui: Pane, controls: Array<Function>, expanded: boolean): void {
   const networkFolder = gui.addFolder({
     title: `Network (Random Regular Graph)`,
-    expanded: true,
+    expanded,
   });
 
   networkFolder.addBinding(config.network, "n_agents", {
@@ -42,10 +47,10 @@ function setupNetworkFolder(gui: Pane, controls: Array<Function>): void {
   });
 }
 
-function setupModelFolder(gui: Pane): void {
+function setupModelFolder(gui: Pane, expanded: boolean): void {
   const modelFolder = gui.addFolder({
     title: "Model (Deffuant-Weisbuch BCM)",
-    expanded: true,
+    expanded,
   });
 
   modelFolder.addBinding(config.model, "sorting", {
@@ -80,10 +85,10 @@ function setupModelFolder(gui: Pane): void {
   });
 }
 
-function setupControlsFolder(gui: Pane, controls: Array<Function>): void {
+function setupControlsFolder(gui: Pane, controls: Array<Function>, expanded: boolean): void {
   const controlFolder = gui.addFolder({
     title: "Controls",
-    expanded: true,
+    expanded,
   });
 
   (
