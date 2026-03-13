@@ -7,6 +7,14 @@ function shouldExpandByDefault(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 }
 
+function setupInstructionsButton(gui: Pane): void {
+  gui.addButton({
+    title: "read instructions",
+  }).on("click", () => {
+    window.location.href = "/TWONy-macro";
+  });
+}
+
 export function createGUI(controls: Array<Function>): Pane {
   const expanded = shouldExpandByDefault();
   const gui = new Pane({
@@ -15,6 +23,7 @@ export function createGUI(controls: Array<Function>): Pane {
   });
   gui.registerPlugin(TweakpaneEssentialsPlugin);
 
+  setupInstructionsButton(gui);
   setupNetworkFolder(gui, controls, expanded);
   setupModelFolder(gui, expanded);
   setupControlsFolder(gui, controls, expanded);
