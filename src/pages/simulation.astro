@@ -3,9 +3,9 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="TWONy-macro - Simulation">
-    <div class="absolute left-1/2 -translate-x-1/2 text-center z-50 top-4">
-            <a class="block p-1 px-1.5 bg-emerald-500 rounded-full font-bold text-sm hover:animate-pulse" href="/TWONy-macro">
-              i     
+    <div class="absolute left-2 top-2 sm:left-1/2 sm:-translate-x-1/2 text-center z-50 sm:top-4">
+            <a class="block p-1 px-1.5 text-slate-400 underline text-sm hover:animate-pulse" href="/TWONy-macro">
+              introduction  
             </a>
         </div>
     <div id="3d-graph"></div>
@@ -66,7 +66,8 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
           !config.state.running
         ) {
           clearInterval(runner);
-          pauseSimulation();
+          resetSimulation();
+          startSimulation();
         }
 
         for (let i = 0; i < data.length; i++) {
