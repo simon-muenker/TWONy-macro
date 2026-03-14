@@ -4,7 +4,10 @@ import * as TweakpaneEssentialsPlugin from "@tweakpane/plugin-essentials";
 import { config } from "./config";
 
 function shouldExpandByDefault(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 768px)").matches
+  );
 }
 
 export function createGUI(controls: Array<Function>): Pane {
@@ -24,14 +27,20 @@ export function createGUI(controls: Array<Function>): Pane {
 }
 
 function setupInstructionsButton(gui: Pane): void {
-  gui.addButton({
-    title: "read introduction",
-  }).on("click", () => {
-    window.location.href = "/TWONy-macro";
-  });
+  gui
+    .addButton({
+      title: "read introduction",
+    })
+    .on("click", () => {
+      window.location.href = "/TWONy-macro";
+    });
 }
 
-function setupNetworkFolder(gui: Pane, controls: Array<Function>, expanded: boolean): void {
+function setupNetworkFolder(
+  gui: Pane,
+  controls: Array<Function>,
+  expanded: boolean,
+): void {
   const networkFolder = gui.addFolder({
     title: `Network (Random Regular Graph)`,
     expanded,
@@ -94,7 +103,11 @@ function setupModelFolder(gui: Pane, expanded: boolean): void {
   });
 }
 
-function setupControlsFolder(gui: Pane, controls: Array<Function>, expanded: boolean): void {
+function setupControlsFolder(
+  gui: Pane,
+  controls: Array<Function>,
+  expanded: boolean,
+): void {
   const controlFolder = gui.addFolder({
     title: "Controls",
     expanded,

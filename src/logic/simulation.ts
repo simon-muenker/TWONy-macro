@@ -77,7 +77,8 @@ export function createSimulationController({
       runStep(data, neighborIndex);
       config.state.current_step++;
 
-      const shouldRender = config.state.current_step % VISUAL_UPDATE_EVERY_STEPS === 0;
+      const shouldRender =
+        config.state.current_step % VISUAL_UPDATE_EVERY_STEPS === 0;
       updateChartData(chart, data, shouldRender);
 
       if (shouldRender) {
@@ -133,7 +134,10 @@ function runStep(data: Array<NodeData>, neighborIndex: NeighborIndex): void {
       config.model.sorting,
     );
 
-    data[i].sentiment = deffuant_weibach_bcm(currentSentiment, neighborSentiment);
+    data[i].sentiment = deffuant_weibach_bcm(
+      currentSentiment,
+      neighborSentiment,
+    );
     sentimentSum += data[i].sentiment;
   }
 
@@ -219,7 +223,9 @@ function buildNeighborIndex(
   return neighbors;
 }
 
-function getNodeId(node: number | string | NodeObject | undefined): number | null {
+function getNodeId(
+  node: number | string | NodeObject | undefined,
+): number | null {
   if (typeof node === "number") {
     return node;
   }

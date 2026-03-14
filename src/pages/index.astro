@@ -3,59 +3,92 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="TWONy-macro">
-    <div class="w-full min-h-full bg-slate-800 text-slate-300">
-      <div class="mx-auto max-w-2xl py-16 md:py-36 px-3">
-        <h1 class="text-3xl md:text-6xl font-bold mb-2">Introduction</h1>
+  <div class="min-h-full w-full bg-slate-800 text-slate-300">
+    <div class="mx-auto max-w-2xl px-3 py-16 md:py-36">
+      <h1 class="mb-2 text-3xl font-bold md:text-6xl">Introduction</h1>
 
-        <p class="leading-6 mb-4">
-          Welcome to TWONy-macro, an interactive demonstration that shows how network structure and algorithmic choices shape opinion formation in online communities. Watch as virtual agents with evolving sentiment states interact in a 3D network visualization, creating patterns of opinion convergence, clustering, and polarization. This simulation helps visualize how the topology of social networks and recommendation algorithms influence the collective emotional dynamics of digital communities.
-        </p>
+      <p class="mb-4 leading-6">
+        Welcome to TWONy-macro, an interactive demonstration that shows how
+        network structure and algorithmic choices shape opinion formation in
+        online communities. Watch as virtual agents with evolving sentiment
+        states interact in a 3D network visualization, creating patterns of
+        opinion convergence, clustering, and polarization. This simulation helps
+        visualize how the topology of social networks and recommendation
+        algorithms influence the collective emotional dynamics of digital
+        communities.
+      </p>
 
-        <p class="text-sm leading-5 mb-2">
-          Explore different neighbor selection strategies - from random interactions to similarity-based or sentiment-biased connections - and observe how these algorithmic choices dramatically affect whether communities converge toward consensus or fragment into opposing camps. Everything runs locally in your browser using advanced 3D graphics and real-time opinion dynamics modeling.
+      <p class="mb-2 text-sm leading-5">
+        Explore different neighbor selection strategies - from random
+        interactions to similarity-based or sentiment-biased connections - and
+        observe how these algorithmic choices dramatically affect whether
+        communities converge toward consensus or fragment into opposing camps.
+        Everything runs locally in your browser using advanced 3D graphics and
+        real-time opinion dynamics modeling.
+      </p>
 
-        </p>
+      <h2 class="mt-6 mb-2 text-xl md:text-3xl">How It Works</h2>
+      <p class="mb-4 leading-6">
+        This simulation implements the Deffuant-Weisbuch Bounded Confidence
+        Model, where virtual agents only influence each other's opinions if
+        they're within a certain "confidence threshold" and can be configured
+        through the following features:
+      </p>
 
-        <h2 class="mt-6 mb-2 text-xl md:text-3xl">How It Works</h2>
-        <p class="leading-6 mb-4">
-          This simulation implements the Deffuant-Weisbuch Bounded Confidence Model, where virtual agents only influence each other's opinions if they're within a certain "confidence threshold" and can be configured through the following features:
-        </p>
+      <ul class="mb-4 list-decimal pl-8">
+        <li class="mb-2">
+          <span class="font-bold">Network Configuration</span>
+          <ul class="list-disc pl-6">
+            <li>Number of Agents: Size of the social network (5-500 nodes)</li>
+            <li>
+              Number of Neighbors: Connectivity degree for each agent (1-5
+              connections)
+            </li>
+          </ul>
+        </li>
+        <li class="mb-2">
+          <span class="font-bold">Opinion Dynamics (Deffuant-Weisbuch BCM)</span
+          >
+          <ul class="list-disc pl-6">
+            <li>
+              Epsilon BCM: Confidence threshold for opinion influence (0.01-1.0)
+            </li>
+            <li>Delta BCM: Influence strength parameter (0.01-1.0)</li>
+            <li>
+              Sorting Strategy: Algorithm for neighbor selection during
+              interactions
+            </li>
+          </ul>
+        </li>
+        <li class="mb-2">
+          <span class="font-bold">Simulation Control</span>
+          <ul class="list-disc pl-6">
+            <li>
+              Number of Steps: Total simulation duration (50-1000 iterations)
+            </li>
+            <li>Real-time Controls: Start, pause, and reset functionality</li>
+            <li>
+              Progress Tracking: Current step and network evaluation metrics
+            </li>
+          </ul>
+        </li>
+      </ul>
 
-        <ul class="list-decimal mb-4 pl-8">
-          <li class="mb-2">
-            <span class="font-bold">Network Configuration</span>
-            <ul class="list-disc pl-6">
-              <li>Number of Agents: Size of the social network (5-500 nodes)</li>
-              <li>Number of Neighbors: Connectivity degree for each agent (1-5 connections)</li>
-            </ul>
-          </li>
-          <li class="mb-2">
-            <span class="font-bold">Opinion Dynamics (Deffuant-Weisbuch BCM)</span>
-            <ul class="list-disc pl-6">
-                <li>Epsilon BCM: Confidence threshold for opinion influence (0.01-1.0)</li>
-                <li>Delta BCM: Influence strength parameter (0.01-1.0)</li>
-                <li>Sorting Strategy: Algorithm for neighbor selection during interactions</li>
-            </ul>
-          </li>
-          <li class="mb-2">
-            <span class="font-bold">Simulation Control</span>
-            <ul class="list-disc pl-6">
-                <li>Number of Steps: Total simulation duration (50-1000 iterations)</li>
-                <li>Real-time Controls: Start, pause, and reset functionality</li>
-                <li>Progress Tracking: Current step and network evaluation metrics</li>
-            </ul>
-          </li>
-        </ul>
+      <p class="mb-2 text-sm leading-5">
+        This educational tool demonstrates core concepts from computational
+        social science, helping users understand how algorithmic design choices
+        in social media platforms can inadvertently shape the emotional
+        landscape of online discourse.
+      </p>
 
-        <p class="text-sm leading-5 mb-2">
-          This educational tool demonstrates core concepts from computational social science, helping users understand how algorithmic design choices in social media platforms can inadvertently shape the emotional landscape of online discourse.
-        </p>
-
-        <div class="my-8 mx-auto text-center">
-            <a class="bg-slate-400 inline-block text-slate-800 font-bold py-1 px-3 rounded-lg hover:animate-pulse" href="/TWONy-macro/simulation">
-              > to simulation
-            </a>
-        </div>
+      <div class="mx-auto my-8 text-center">
+        <a
+          class="inline-block rounded-lg bg-slate-400 px-3 py-1 font-bold text-slate-800 hover:animate-pulse"
+          href="/TWONy-macro/simulation"
+        >
+          > to simulation
+        </a>
       </div>
     </div>
+  </div>
 </BaseLayout>
