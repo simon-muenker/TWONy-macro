@@ -14,24 +14,10 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
 </BaseLayout>
 
   <script>
-    import _ from "lodash";
-    import {
-      createChart,
-      prepareChart,
-      updateChartData,
-    } from "@logic/chart.js";
-    import {
-      createGraph,
-      generateGraphData,
-      applyColorScale,
-      toggleOrbitControls,
-    } from "@logic/graph.js";
+    import { createChart } from "@logic/chart.js";
+    import { createGraph } from "@logic/graph.js";
     import { createGUI } from "@logic/gui.js";
-
-    import { config } from "@logic/config.ts";
-    import { deffuant_weibach_bcm, select_neighbor } from "@logic/model.ts";
-
-    import { type NodeData, get_neighbors } from "@logic/generator.ts";
+    import { createSimulationController } from "@logic/simulation.ts";
 
     const graphEL: HTMLElement = document.getElementById(
       "3d-graph",
@@ -40,82 +26,11 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
       "eval-chart",
     ) as HTMLCanvasElement;
 
-    let data: Array<NodeData> = [];
-
-    createGUI([startSimulation, pauseSimulation, resetSimulation]);
     const chart = createChart(canvasEL);
     const graph = createGraph(graphEL);
+    const simulation = createSimulationController({ chart, graph });
 
-    resetSimulation();
-
-    function startSimulation() {
-      if (config.state.running) return;
-
-      console.debug("> Starting Simulation.");
-      config.state.running = true;
-      toggleOrbitControls(graph);
-
-      const runner = setInterval(() => {
-        if (!config.state.running) {
-          clearInterval(runner);
-          return;
-        }
-
-        if (config.state.current_step >= config.model.n_steps) {
-          clearInterval(runner);
-          if (config.state.auto_loop) {
-            resetSimulation();
-            startSimulation();
-          } else {
-            resetSimulation();
-          }
-        }
-
-        for (let i = 0; i < data.length; i++) {
-          const neighbor = get_neighbors(i, graph.graphData().links);
-
-          const selected_neighbor_value = select_neighbor(
-            data[i].sentiment,
-            neighbor,
-            config.model.sorting,
-          );
-
-          data[i].sentiment = deffuant_weibach_bcm(
-            data[i].sentiment,
-            selected_neighbor_value,
-          );
-        }
-
-        applyColorScale(graph);
-        setCurrentEvaluation();
-        updateChartData(chart, data);
-
-        config.state.current_step++;
-      }, 50);
-    }
-
-    function pauseSimulation() {
-      if (!config.state.running) return;
-
-      console.debug("> Pause Simulation.");
-      config.state.running = false;
-      toggleOrbitControls(graph, false);
-    }
-
-    function resetSimulation() {
-      console.debug("> Resetting Simulation.");
-      if (config.state.running) pauseSimulation();
-
-      data = generateGraphData(graph);
-
-      setCurrentEvaluation();
-      prepareChart(chart, data);
-
-      config.state.current_step = 0;
-    }
-
-    function setCurrentEvaluation() {
-      config.state.current_evaluation = _.mean(data.map((d) => d.sentiment));
-    }
+    createGUI([simulation.start, simulation.pause, simulation.reset]);
+    simulation.reset();
   </script>
 </html>

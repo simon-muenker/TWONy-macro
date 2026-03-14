@@ -13,7 +13,7 @@ import {
 } from "./generator";
 import { config } from "./config";
 
-type Graph = ForceGraph3DInstance<NodeObject, LinkObject<NodeObject>>;
+export type Graph = ForceGraph3DInstance<NodeObject, LinkObject<NodeObject>>;
 
 export function createGraph(element: HTMLElement): Graph {
   const graph = new ForceGraph3D(element, { controlType: "orbit" })

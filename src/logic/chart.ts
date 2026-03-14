@@ -48,11 +48,17 @@ export function prepareChart(chart: Chart, data: Array<NodeData>): void {
   chart.update();
 }
 
-export function updateChartData(chart: Chart, data: Array<NodeData>) {
+export function updateChartData(
+  chart: Chart,
+  data: Array<NodeData>,
+  shouldRender: boolean = true,
+) {
   for (let i = 0; i < chart.data.datasets.length; ++i) {
     chart.data.datasets[i].data.push(data[i].sentiment);
   }
-  chart.update();
+  if (shouldRender) {
+    chart.update();
+  }
 }
 
 export function formatDataset(data: Array<number>) {
