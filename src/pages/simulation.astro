@@ -56,12 +56,14 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
       toggleOrbitControls(graph);
 
       const runner = setInterval(() => {
-        if (
-          config.state.current_step >= config.model.n_steps ||
-          !config.state.running
-        ) {
+        if (!config.state.running) {
           clearInterval(runner);
-          if (config.state.auto_loop && config.state.running) {
+          return;
+        }
+
+        if (config.state.current_step >= config.model.n_steps) {
+          clearInterval(runner);
+          if (config.state.auto_loop) {
             resetSimulation();
             startSimulation();
           } else {
