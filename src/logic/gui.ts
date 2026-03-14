@@ -7,14 +7,6 @@ function shouldExpandByDefault(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 }
 
-function setupInstructionsButton(gui: Pane): void {
-  gui.addButton({
-    title: "read instructions",
-  }).on("click", () => {
-    window.location.href = "/TWONy-macro";
-  });
-}
-
 export function createGUI(controls: Array<Function>): Pane {
   const expanded = shouldExpandByDefault();
   const gui = new Pane({
@@ -29,6 +21,14 @@ export function createGUI(controls: Array<Function>): Pane {
   setupControlsFolder(gui, controls, expanded);
 
   return gui;
+}
+
+function setupInstructionsButton(gui: Pane): void {
+  gui.addButton({
+    title: "read introduction",
+  }).on("click", () => {
+    window.location.href = "/TWONy-macro";
+  });
 }
 
 function setupNetworkFolder(gui: Pane, controls: Array<Function>, expanded: boolean): void {
@@ -122,11 +122,11 @@ function setupControlsFolder(gui: Pane, controls: Array<Function>, expanded: boo
     format: (v) => ((v / config.model.n_steps) * 100).toFixed(2),
   });
 
-  controlFolder.addBinding(config.state, "current_evaluation", {
-    label: "Evaluation",
-    readonly: true,
-    view: "graph",
-    min: 0,
-    max: +1,
-  });
+  // controlFolder.addBinding(config.state, "current_evaluation", {
+  //   label: "Evaluation",
+  //   readonly: true,
+  //   view: "graph",
+  //   min: 0,
+  //   max: +1,
+  // });
 }
