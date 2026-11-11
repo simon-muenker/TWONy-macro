@@ -1,202 +1,224 @@
 import type Chart from "chart.js/auto";
 import type { LinkObject, NodeObject } from "three-forcegraph";
 
-import { config } from "./config";
-import { prepareChart, updateChartData } from "./chart";
+import { config, type SimulationStatus } from "./config";
+import { prepareChart, renderChart, updateChartData } from "./chart";
 import {
   applyColorScale,
   generateGraphData,
   toggleOrbitControls,
   type Graph,
 } from "./graph";
-import { deffuant_weibach_bcm } from "./model";
+import {
+  computeMetrics,
+  deffuant_weisbuch_bcm,
+  select_neighbor,
+  type Metrics,
+} from "./model";
 import type { NodeData } from "./generator";
 
-const TICK_INTERVAL_MS = 50;
-const VISUAL_UPDATE_EVERY_STEPS = 1;
+// Rendering every agent line gets expensive for large networks: redraw the
+// chart only every n-th step once the network exceeds this many agents.
+const CHART_AGENTS_PER_FRAME = 150;
+const AUTO_LOOP_DELAY_MS = 1500;
 
-type Runner = ReturnType<typeof setInterval> | null;
+type Timer = ReturnType<typeof setTimeout> | null;
 type NeighborIndex = Array<Array<number>>;
 
-interface SimulationController {
+export interface SimulationSnapshot extends Metrics {
+  status: SimulationStatus;
+  step: number;
+  n_steps: number;
+}
+
+export interface SimulationController {
   start: () => void;
   pause: () => void;
+  step: () => void;
   reset: () => void;
 }
 
 interface SimulationContext {
   chart: Chart;
   graph: Graph;
+  onUpdate?: (snapshot: SimulationSnapshot) => void;
 }
 
 export function createSimulationController({
   chart,
   graph,
+  onUpdate,
 }: SimulationContext): SimulationController {
   let data: Array<NodeData> = [];
   let neighborIndex: NeighborIndex = [];
-  let runner: Runner = null;
+  let metrics: Metrics = { mean: 0, spread: 0, clusters: 0 };
+  let timer: Timer = null;
 
-  const clearRunner = (): void => {
-    if (!runner) {
-      return;
+  const clearTimer = (): void => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
     }
-
-    clearInterval(runner);
-    runner = null;
   };
 
-  const start = (): void => {
-    if (config.state.running) {
-      return;
-    }
+  const setStatus = (status: SimulationStatus): void => {
+    config.state.status = status;
+    toggleOrbitControls(graph, status === "running");
+  };
 
-    console.debug("> Starting Simulation.");
-    config.state.running = true;
-    toggleOrbitControls(graph);
+  const emit = (): void => {
+    onUpdate?.({
+      ...metrics,
+      status: config.state.status,
+      step: config.state.current_step,
+      n_steps: config.model.n_steps,
+    });
+  };
 
-    runner = setInterval(() => {
-      if (!config.state.running) {
-        clearRunner();
-        return;
-      }
+  const isComplete = (): boolean =>
+    config.state.current_step >= config.model.n_steps;
 
-      if (config.state.current_step >= config.model.n_steps) {
-        clearRunner();
+  const advance = (forceRender: boolean = false): void => {
+    metrics = runStep(data, neighborIndex);
+    config.state.current_step++;
+    config.state.current_evaluation = metrics.mean;
 
+    const renderEvery = Math.ceil(data.length / CHART_AGENTS_PER_FRAME);
+    const shouldRender =
+      forceRender ||
+      isComplete() ||
+      config.state.current_step % renderEvery === 0;
+
+    updateChartData(chart, data, metrics.mean, shouldRender);
+    applyColorScale(graph);
+  };
+
+  const finish = (): void => {
+    // keep the final state on screen so the outcome can be inspected
+    setStatus("finished");
+    renderChart(chart);
+    emit();
+
+    if (config.state.auto_loop) {
+      timer = setTimeout(() => {
+        timer = null;
         if (config.state.auto_loop) {
           reset();
           start();
-        } else {
-          reset();
         }
-
-        return;
-      }
-
-      runStep(data, neighborIndex);
-      config.state.current_step++;
-
-      const shouldRender =
-        config.state.current_step % VISUAL_UPDATE_EVERY_STEPS === 0;
-      updateChartData(chart, data, shouldRender);
-
-      if (shouldRender) {
-        applyColorScale(graph);
-      }
-    }, TICK_INTERVAL_MS);
+      }, AUTO_LOOP_DELAY_MS);
+    }
   };
 
-  const pause = (): void => {
-    if (!config.state.running) {
+  const tick = (): void => {
+    timer = null;
+
+    if (config.state.status !== "running") {
       return;
     }
 
-    console.debug("> Pause Simulation.");
-    config.state.running = false;
-    toggleOrbitControls(graph, false);
-    clearRunner();
+    if (isComplete()) {
+      finish();
+      return;
+    }
+
+    advance();
+    emit();
+
+    timer = setTimeout(tick, 1000 / config.utilities.speed);
+  };
+
+  const start = (): void => {
+    if (config.state.status === "running") {
+      return;
+    }
+
+    clearTimer();
+
+    if (isComplete()) {
+      reset();
+    }
+
+    setStatus("running");
+    emit();
+    tick();
+  };
+
+  const pause = (): void => {
+    clearTimer();
+
+    if (config.state.status === "running") {
+      setStatus("paused");
+      renderChart(chart);
+      emit();
+    }
+  };
+
+  const step = (): void => {
+    pause();
+
+    if (isComplete()) {
+      return;
+    }
+
+    advance(true);
+
+    if (isComplete()) {
+      setStatus("finished");
+    } else {
+      setStatus("paused");
+    }
+    emit();
   };
 
   const reset = (): void => {
-    console.debug("> Resetting Simulation.");
-
-    if (config.state.running) {
-      pause();
-    }
+    clearTimer();
 
     data = generateGraphData(graph);
     neighborIndex = buildNeighborIndex(graph.graphData().links, data.length);
+    metrics = computeMetrics(data.map((node) => node.sentiment));
 
     config.state.current_step = 0;
-    config.state.current_evaluation = computeEvaluation(data);
+    config.state.current_evaluation = metrics.mean;
 
-    prepareChart(chart, data);
+    setStatus("idle");
+    prepareChart(chart, data, metrics.mean);
     applyColorScale(graph);
+    emit();
   };
 
   return {
     start,
     pause,
+    step,
     reset,
   };
 }
 
-function runStep(data: Array<NodeData>, neighborIndex: NeighborIndex): void {
-  let sentimentSum = 0;
+// One synchronous round: every agent interacts with one selected neighbor,
+// based on the sentiments at the beginning of the step. The result therefore
+// does not depend on the order in which the agents are visited.
+function runStep(data: Array<NodeData>, neighborIndex: NeighborIndex): Metrics {
+  const { sorting, eps_bcm, delta_bcm } = config.model;
+  const current = Float64Array.from(data, (node) => node.sentiment);
 
   for (let i = 0; i < data.length; i++) {
-    const currentSentiment = data[i].sentiment;
-    const neighborSentiment = selectNeighborSentiment(
-      currentSentiment,
+    const neighbor = select_neighbor(
+      current[i],
       neighborIndex[i],
-      data,
-      config.model.sorting,
+      current,
+      sorting,
     );
 
-    data[i].sentiment = deffuant_weibach_bcm(
-      currentSentiment,
-      neighborSentiment,
+    data[i].sentiment = deffuant_weisbuch_bcm(
+      current[i],
+      neighbor,
+      eps_bcm,
+      delta_bcm,
     );
-    sentimentSum += data[i].sentiment;
   }
 
-  config.state.current_evaluation = sentimentSum / data.length;
-}
-
-function selectNeighborSentiment(
-  sentiment: number,
-  neighbors: Array<number>,
-  data: Array<NodeData>,
-  sorting: string,
-): number {
-  if (neighbors.length === 0) {
-    return sentiment;
-  }
-
-  switch (sorting) {
-    case "random": {
-      const randomIndex = Math.floor(Math.random() * neighbors.length);
-      return data[neighbors[randomIndex]].sentiment;
-    }
-    case "positivity": {
-      let maxSentiment = Number.NEGATIVE_INFINITY;
-      for (let i = 0; i < neighbors.length; i++) {
-        const candidate = data[neighbors[i]].sentiment;
-        if (candidate > maxSentiment) {
-          maxSentiment = candidate;
-        }
-      }
-      return maxSentiment;
-    }
-    case "negativity": {
-      let minSentiment = Number.POSITIVE_INFINITY;
-      for (let i = 0; i < neighbors.length; i++) {
-        const candidate = data[neighbors[i]].sentiment;
-        if (candidate < minSentiment) {
-          minSentiment = candidate;
-        }
-      }
-      return minSentiment;
-    }
-    case "similarity": {
-      let closestSentiment = data[neighbors[0]].sentiment;
-      let closestDistance = Math.abs(closestSentiment - sentiment);
-
-      for (let i = 1; i < neighbors.length; i++) {
-        const candidate = data[neighbors[i]].sentiment;
-        const distance = Math.abs(candidate - sentiment);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestSentiment = candidate;
-        }
-      }
-
-      return closestSentiment;
-    }
-    default:
-      return sentiment;
-  }
+  return computeMetrics(data.map((node) => node.sentiment));
 }
 
 function buildNeighborIndex(
@@ -209,12 +231,8 @@ function buildNeighborIndex(
     const sourceId = getNodeId(links[i].source);
     const targetId = getNodeId(links[i].target);
 
-    if (sourceId === null || targetId === null) {
+    if (sourceId === null || targetId === null || !neighbors[sourceId]) {
       continue;
-    }
-
-    if (!neighbors[sourceId]) {
-      neighbors[sourceId] = [];
     }
 
     neighbors[sourceId].push(targetId);
@@ -226,40 +244,16 @@ function buildNeighborIndex(
 function getNodeId(
   node: number | string | NodeObject | undefined,
 ): number | null {
-  if (typeof node === "number") {
-    return node;
+  const id = node !== null && typeof node === "object" ? node.id : node;
+
+  if (typeof id === "number") {
+    return id;
   }
 
-  if (typeof node === "string") {
-    const parsed = Number(node);
+  if (typeof id === "string") {
+    const parsed = Number(id);
     return Number.isNaN(parsed) ? null : parsed;
   }
 
-  if (node && "id" in node) {
-    const nodeId = (node as { id?: number | string }).id;
-
-    if (typeof nodeId === "number") {
-      return nodeId;
-    }
-
-    if (typeof nodeId === "string") {
-      const parsed = Number(nodeId);
-      return Number.isNaN(parsed) ? null : parsed;
-    }
-  }
-
   return null;
-}
-
-function computeEvaluation(data: Array<NodeData>): number {
-  if (data.length === 0) {
-    return 0;
-  }
-
-  let sum = 0;
-  for (let i = 0; i < data.length; i++) {
-    sum += data[i].sentiment;
-  }
-
-  return sum / data.length;
 }

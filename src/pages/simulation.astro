@@ -1,35 +1,104 @@
 ---
 import BaseLayout from "src/layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <BaseLayout title="TWONy-macro - Simulation">
-  <div id="3d-graph"></div>
+  <div id="3d-graph" data-introduction-url={`${base}/`}></div>
   <div
     class="absolute bottom-0 left-0 z-50 w-full rounded-tr-2xl bg-black/10 p-4 backdrop-blur-md md:w-auto"
   >
+    <dl
+      class="mb-3 grid grid-cols-4 gap-x-4 text-slate-300 md:flex md:gap-x-8"
+      aria-live="off"
+    >
+      <div>
+        <dt class="text-xs text-slate-400">
+          Step · <span id="stat-status">idle</span>
+        </dt>
+        <dd class="text-lg tabular-nums md:text-xl">
+          <span id="stat-step">0</span><span
+            class="text-sm text-slate-400"
+            id="stat-steps-total"></span>
+        </dd>
+      </div>
+      <div title="Average sentiment of all agents (0 = negative, 1 = positive)">
+        <dt class="flex items-center gap-1.5 text-xs text-slate-400">
+          <span class="inline-block h-0.5 w-3 rounded bg-blue-400"></span>
+          Avg. sentiment
+        </dt>
+        <dd class="text-lg tabular-nums md:text-xl" id="stat-mean">–</dd>
+      </div>
+      <div title="Standard deviation of the sentiments: 0 means full consensus">
+        <dt class="text-xs text-slate-400">Spread (σ)</dt>
+        <dd class="text-lg tabular-nums md:text-xl" id="stat-spread">–</dd>
+      </div>
+      <div
+        title="Groups of agents separated by a sentiment gap larger than 0.05"
+      >
+        <dt class="text-xs text-slate-400">Opinion clusters</dt>
+        <dd class="text-lg tabular-nums md:text-xl" id="stat-clusters">–</dd>
+      </div>
+    </dl>
     <div class="relative block h-42 w-full md:w-2xl">
-      <canvas id="eval-chart"> </canvas>
+      <canvas
+        id="eval-chart"
+        role="img"
+        aria-label="Sentiment of every agent and the network average over the simulation steps"
+      >
+      </canvas>
     </div>
+    <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+      <span class="inline-block h-px w-3 bg-white/60"></span>
+      thin lines: individual agents
+    </p>
   </div>
 </BaseLayout>
 
 <script>
-  import { createChart } from "@logic/chart.js";
-  import { createGraph } from "@logic/graph.js";
-  import { createGUI } from "@logic/gui.js";
-  import { createSimulationController } from "@logic/simulation.ts";
+  import { createChart } from "@logic/chart.ts";
+  import { loadConfig } from "@logic/config.ts";
+  import { createGraph } from "@logic/graph.ts";
+  import { createGUI } from "@logic/gui.ts";
+  import {
+    createSimulationController,
+    type SimulationSnapshot,
+  } from "@logic/simulation.ts";
 
-  const graphEL: HTMLElement = document.getElementById(
-    "3d-graph",
-  ) as HTMLElement;
-  const canvasEL: HTMLCanvasElement = document.getElementById(
-    "eval-chart",
-  ) as HTMLCanvasElement;
+  const byId = (id: string) => document.getElementById(id) as HTMLElement;
+
+  const graphEL = byId("3d-graph");
+  const canvasEL = byId("eval-chart") as HTMLCanvasElement;
+
+  const stats = {
+    status: byId("stat-status"),
+    step: byId("stat-step"),
+    total: byId("stat-steps-total"),
+    mean: byId("stat-mean"),
+    spread: byId("stat-spread"),
+    clusters: byId("stat-clusters"),
+  };
+
+  function renderStats(snapshot: SimulationSnapshot): void {
+    stats.status.textContent = snapshot.status;
+    stats.step.textContent = String(snapshot.step);
+    stats.total.textContent = ` / ${snapshot.n_steps}`;
+    stats.mean.textContent = snapshot.mean.toFixed(3);
+    stats.spread.textContent = snapshot.spread.toFixed(3);
+    stats.clusters.textContent = String(snapshot.clusters);
+  }
+
+  loadConfig();
 
   const chart = createChart(canvasEL);
   const graph = createGraph(graphEL);
-  const simulation = createSimulationController({ chart, graph });
+  const simulation = createSimulationController({
+    chart,
+    graph,
+    onUpdate: renderStats,
+  });
 
-  createGUI([simulation.start, simulation.pause, simulation.reset]);
+  createGUI(simulation, graph, graphEL.dataset.introductionUrl ?? "/");
   simulation.reset();
 </script>
