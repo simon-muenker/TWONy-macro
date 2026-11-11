@@ -65,7 +65,7 @@ function setupNetworkFolder(
   networkFolder.addBinding(config.network, "n_neighbors", {
     label: "Num._Neighbors",
     min: 1,
-    max: 5,
+    max: 15,
     step: 1,
   });
 

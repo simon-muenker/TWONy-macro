@@ -46,12 +46,35 @@ export function createGraph(element: HTMLElement): Graph {
 export function generateGraphData(graph: Graph): Array<NodeData> {
   let data = generateNodeData(config.network.n_agents);
 
+  applyLayoutForces(graph, config.network.n_neighbors);
+
   graph.graphData({
     nodes: generateNodes(config.network.n_agents, data),
     links: generateLinks(config.network.n_agents, config.network.n_neighbors),
   });
 
   return data;
+}
+
+// d3-force defaults; they give a readable layout up to BASE_NEIGHBORS links
+// per node. Beyond that the extra links pull the network into a dense ball,
+// so links get longer and nodes repel each other harder.
+const BASE_NEIGHBORS = 2;
+const BASE_LINK_DISTANCE = 30;
+const BASE_CHARGE_STRENGTH = -30;
+
+type LinkForce = { distance(value: number): unknown };
+type ChargeForce = { strength(value: number): unknown };
+
+export function applyLayoutForces(graph: Graph, numNeighbors: number): void {
+  const spread = Math.max(1, numNeighbors / BASE_NEIGHBORS);
+
+  (graph.d3Force("link") as unknown as LinkForce | undefined)?.distance(
+    BASE_LINK_DISTANCE * spread,
+  );
+  (graph.d3Force("charge") as unknown as ChargeForce | undefined)?.strength(
+    BASE_CHARGE_STRENGTH * spread ** 1.5,
+  );
 }
 
 export function applyColorScale(graph: Graph): void {
