@@ -1,10 +1,12 @@
 ---
 import BaseLayout from "src/layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <BaseLayout title="TWONy-macro">
   <div class="min-h-full w-full bg-slate-800 text-slate-300">
-    <div class="mx-auto max-w-2xl px-3 py-16 md:py-36">
+    <div class="mx-auto max-w-2xl px-4 py-16 md:py-36">
       <h1 class="mb-2 text-3xl font-bold md:text-6xl">Introduction</h1>
 
       <p class="mb-4 leading-6">
@@ -21,27 +23,78 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
       <p class="mb-2 text-sm leading-5">
         Explore different neighbor selection strategies - from random
         interactions to similarity-based or sentiment-biased connections - and
-        observe how these algorithmic choices dramatically affect whether
-        communities converge toward consensus or fragment into opposing camps.
-        Everything runs locally in your browser using advanced 3D graphics and
-        real-time opinion dynamics modeling.
+        observe how these algorithmic choices affect whether communities
+        converge toward consensus or fragment into opposing camps. Everything
+        runs locally in your browser: no data is transmitted, tracked, or stored
+        on a server.
       </p>
+
+      <div class="mx-auto my-8 text-center">
+        <a
+          class="inline-block rounded-lg bg-slate-300 px-4 py-2 font-bold text-slate-800 hover:bg-white"
+          href={`${base}/simulation`}
+        >
+          &gt; to simulation
+        </a>
+      </div>
 
       <h2 class="mt-6 mb-2 text-xl md:text-3xl">How It Works</h2>
       <p class="mb-4 leading-6">
-        This simulation implements the Deffuant-Weisbuch Bounded Confidence
-        Model, where virtual agents only influence each other's opinions if
-        they're within a certain "confidence threshold" and can be configured
-        through the following features:
+        Every agent holds a sentiment between 0 (negative, red) and 1 (positive,
+        green) and follows a fixed number of other agents. In each step, a
+        sorting algorithm picks one of the followed agents as the interaction
+        partner. The simulation implements the Deffuant-Weisbuch Bounded
+        Confidence Model: the agent only moves toward the partner's sentiment if
+        both are within a certain "confidence threshold" - otherwise the
+        encounter is ignored.
       </p>
 
+      <h2 class="mt-6 mb-2 text-xl md:text-3xl">Sorting Algorithms</h2>
+      <p class="mb-4 leading-6">
+        The sorting strategy stands in for a platform's recommendation algorithm
+        - it decides whose content an agent sees:
+      </p>
+      <dl
+        class="mb-4 grid grid-cols-1 gap-x-6 gap-y-3 text-sm leading-5 md:grid-cols-2"
+      >
+        <div>
+          <dt class="font-bold">Random</dt>
+          <dd>
+            A followed agent is picked by chance - the unbiased baseline, like a
+            feed without ranking.
+          </dd>
+        </div>
+        <div>
+          <dt class="font-bold">Similarity</dt>
+          <dd>
+            The followed agent with the closest sentiment is shown. Agents
+            mostly meet like-minded peers.
+          </dd>
+        </div>
+        <div>
+          <dt class="font-bold">Positivity</dt>
+          <dd>
+            The most positive followed agent is shown, pulling sentiment upward
+            wherever the confidence threshold allows.
+          </dd>
+        </div>
+        <div>
+          <dt class="font-bold">Negativity</dt>
+          <dd>
+            The most negative followed agent is shown, pulling sentiment
+            downward wherever the confidence threshold allows.
+          </dd>
+        </div>
+      </dl>
+
+      <h2 class="mt-6 mb-2 text-xl md:text-3xl">Configuration</h2>
       <ul class="mb-4 list-decimal pl-8">
         <li class="mb-2">
           <span class="font-bold">Network Configuration</span>
           <ul class="list-disc pl-6">
             <li>Number of Agents: Size of the social network (5-500 nodes)</li>
             <li>
-              Number of Neighbors: Connectivity degree for each agent (1-5
+              Number of Neighbors: How many other agents each agent follows (1-5
               connections)
             </li>
           </ul>
@@ -66,11 +119,35 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
             <li>
               Number of Steps: Total simulation duration (50-1000 iterations)
             </li>
-            <li>Real-time Controls: Start, pause, and reset functionality</li>
             <li>
-              Progress Tracking: Current step and network evaluation metrics
+              Real-time Controls: Start, pause, single-step, and reset, with
+              adjustable speed and an optional auto loop
+            </li>
+            <li>
+              Model parameters can be changed while the simulation runs;
+              changing the network generates a new one
             </li>
           </ul>
+        </li>
+      </ul>
+
+      <h2 class="mt-6 mb-2 text-xl md:text-3xl">Reading the Results</h2>
+      <ul class="mb-4 list-disc pl-8">
+        <li>
+          The chart traces every agent's sentiment as a thin line and the
+          network average as a bold blue line.
+        </li>
+        <li>
+          Spread (σ) is the standard deviation of all sentiments: it shrinks
+          toward 0 as the network approaches consensus.
+        </li>
+        <li>
+          Opinion clusters counts the groups of agents that remain separated on
+          the sentiment scale - more than one means the network has fragmented.
+        </li>
+        <li>
+          Hover a node in the 3D view to read an agent's current sentiment; drag
+          to rotate, scroll to zoom.
         </li>
       </ul>
 
@@ -83,10 +160,10 @@ import BaseLayout from "src/layouts/BaseLayout.astro";
 
       <div class="mx-auto my-8 text-center">
         <a
-          class="inline-block rounded-lg bg-slate-400 px-3 py-1 font-bold text-slate-800 hover:animate-pulse"
-          href="/TWONy-macro/simulation"
+          class="inline-block rounded-lg bg-slate-300 px-4 py-2 font-bold text-slate-800 hover:bg-white"
+          href={`${base}/simulation`}
         >
-          > to simulation
+          &gt; to simulation
         </a>
       </div>
     </div>

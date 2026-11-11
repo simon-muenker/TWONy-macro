@@ -26,7 +26,7 @@ TWONy-macro is an educational tool that visualizes how network structure and rec
 - Interactive 3D force-directed graph using Three.js
 - Color-coded nodes representing sentiment states (red-yellow-green scale)
 - Dynamic visual updates showing opinion changes over time
-- Optional bloom effects for enhanced visual appeal
+- Optional bloom effects for enhanced visual appeal (toggle in the GUI)
 - Orbit controls for 3D navigation
 
 ### Algorithm Comparison
@@ -45,16 +45,16 @@ TWONy-macro is an educational tool that visualizes how network structure and rec
 
 ### Data Visualization
 
-- Live chart showing average network sentiment over time
-- Real-time progress tracking and evaluation metrics
+- Live chart showing every agent's sentiment and the average network sentiment over time
+- Real-time progress tracking and evaluation metrics (average sentiment, spread, number of opinion clusters)
 - Interactive GUI controls for parameter adjustment
-- Step-by-step simulation control (start, pause, reset)
+- Step-by-step simulation control (start, pause, single step, reset)
 
 ### Simulation Management
 
-- Configurable simulation length (50-1000 steps)
+- Configurable simulation length (50-1000 steps) and speed, with optional auto loop
 - Real-time parameter adjustment during simulation
-- Session state management
+- Session state management (parameters are kept in the browser's session storage)
 - Performance-optimized rendering and computation
 
 ## Installation

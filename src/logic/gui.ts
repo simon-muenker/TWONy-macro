@@ -1,7 +1,9 @@
-// src/logic/guiSetup.ts
 import { Pane } from "tweakpane";
 import * as TweakpaneEssentialsPlugin from "@tweakpane/plugin-essentials";
-import { config } from "./config";
+
+import { config, saveConfig } from "./config";
+import { setBloomEffect, type Graph } from "./graph";
+import type { SimulationController } from "./simulation";
 
 function shouldExpandByDefault(): boolean {
   return (
@@ -10,7 +12,11 @@ function shouldExpandByDefault(): boolean {
   );
 }
 
-export function createGUI(controls: Array<Function>): Pane {
+export function createGUI(
+  simulation: SimulationController,
+  graph: Graph,
+  introductionUrl: string,
+): Pane {
   const expanded = shouldExpandByDefault();
   const gui = new Pane({
     title: "Configuration",
@@ -18,27 +24,30 @@ export function createGUI(controls: Array<Function>): Pane {
   });
   gui.registerPlugin(TweakpaneEssentialsPlugin);
 
-  setupInstructionsButton(gui);
-  setupNetworkFolder(gui, controls, expanded);
+  setupInstructionsButton(gui, introductionUrl);
+  setupNetworkFolder(gui, simulation, expanded);
   setupModelFolder(gui, expanded);
-  setupControlsFolder(gui, controls, expanded);
+  setupControlsFolder(gui, simulation, expanded);
+  setupAppearanceFolder(gui, graph);
+
+  gui.on("change", () => saveConfig());
 
   return gui;
 }
 
-function setupInstructionsButton(gui: Pane): void {
+function setupInstructionsButton(gui: Pane, introductionUrl: string): void {
   gui
     .addButton({
       title: "read introduction",
     })
     .on("click", () => {
-      window.location.href = "/TWONy-macro";
+      window.location.href = introductionUrl;
     });
 }
 
 function setupNetworkFolder(
   gui: Pane,
-  controls: Array<Function>,
+  simulation: SimulationController,
   expanded: boolean,
 ): void {
   const networkFolder = gui.addFolder({
@@ -60,8 +69,17 @@ function setupNetworkFolder(
     step: 1,
   });
 
-  networkFolder.on("change", (_) => {
-    controls[2]();
+  // regenerate the network once the slider is released, not on every drag event
+  networkFolder.on("change", (ev) => {
+    if (!ev.last) {
+      return;
+    }
+
+    const wasRunning = config.state.status === "running";
+    simulation.reset();
+    if (wasRunning) {
+      simulation.start();
+    }
   });
 }
 
@@ -105,7 +123,7 @@ function setupModelFolder(gui: Pane, expanded: boolean): void {
 
 function setupControlsFolder(
   gui: Pane,
-  controls: Array<Function>,
+  simulation: SimulationController,
   expanded: boolean,
 ): void {
   const controlFolder = gui.addFolder({
@@ -113,33 +131,48 @@ function setupControlsFolder(
     expanded,
   });
 
-  controlFolder.addBinding(config.state, "auto_loop", {
-    label: "Auto Loop",
-  });
+  const actions = [
+    { title: "Start", run: simulation.start },
+    { title: "Pause", run: simulation.pause },
+    { title: "Step", run: simulation.step },
+    { title: "Reset", run: simulation.reset },
+  ];
 
   (
     controlFolder.addBlade({
       view: "buttongrid",
-      size: [3, 1],
-      cells: (x: number) => ({
-        title: ["Start", "Pause", "Reset"][x],
+      size: [2, 2],
+      cells: (x: number, y: number) => ({
+        title: actions[y * 2 + x].title,
       }),
     }) as any
   ).on("click", (ev: any) => {
-    controls[ev.index[0]]();
+    actions[ev.index[1] * 2 + ev.index[0]].run();
   });
 
-  controlFolder.addBinding(config.state, "current_step", {
-    label: "Progress",
-    readonly: true,
-    format: (v) => ((v / config.model.n_steps) * 100).toFixed(2),
+  controlFolder.addBinding(config.utilities, "speed", {
+    label: "Speed",
+    min: 1,
+    max: 60,
+    step: 1,
   });
 
-  // controlFolder.addBinding(config.state, "current_evaluation", {
-  //   label: "Evaluation",
-  //   readonly: true,
-  //   view: "graph",
-  //   min: 0,
-  //   max: +1,
-  // });
+  controlFolder.addBinding(config.state, "auto_loop", {
+    label: "Auto Loop",
+  });
+}
+
+function setupAppearanceFolder(gui: Pane, graph: Graph): void {
+  const appearanceFolder = gui.addFolder({
+    title: "Appearance",
+    expanded: true,
+  });
+
+  appearanceFolder
+    .addBinding(config.utilities, "bloomFilter", {
+      label: "Bloom Effect",
+    })
+    .on("change", (ev) => {
+      setBloomEffect(graph, ev.value);
+    });
 }
